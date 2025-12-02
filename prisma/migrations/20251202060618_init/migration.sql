@@ -1,0 +1,147 @@
+-- CreateTable
+CREATE TABLE "Repository" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "githubId" INTEGER NOT NULL,
+    "name" TEXT NOT NULL,
+    "fullName" TEXT NOT NULL,
+    "description" TEXT,
+    "private" BOOLEAN NOT NULL,
+    "htmlUrl" TEXT NOT NULL,
+    "cloneUrl" TEXT NOT NULL,
+    "language" TEXT,
+    "stars" INTEGER NOT NULL DEFAULT 0,
+    "forks" INTEGER NOT NULL DEFAULT 0,
+    "openIssues" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" DATETIME NOT NULL,
+    "updatedAt" DATETIME NOT NULL,
+    "syncedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE "Commit" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "sha" TEXT NOT NULL,
+    "message" TEXT NOT NULL,
+    "author" TEXT NOT NULL,
+    "authorEmail" TEXT,
+    "authorDate" DATETIME NOT NULL,
+    "committer" TEXT NOT NULL,
+    "committerEmail" TEXT,
+    "committerDate" DATETIME NOT NULL,
+    "additions" INTEGER NOT NULL DEFAULT 0,
+    "deletions" INTEGER NOT NULL DEFAULT 0,
+    "totalChanges" INTEGER NOT NULL DEFAULT 0,
+    "filesChanged" INTEGER NOT NULL DEFAULT 0,
+    "htmlUrl" TEXT NOT NULL,
+    "repositoryId" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Commit_repositoryId_fkey" FOREIGN KEY ("repositoryId") REFERENCES "Repository" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "PullRequest" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "githubId" INTEGER NOT NULL,
+    "number" INTEGER NOT NULL,
+    "title" TEXT NOT NULL,
+    "body" TEXT,
+    "state" TEXT NOT NULL,
+    "author" TEXT NOT NULL,
+    "htmlUrl" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL,
+    "updatedAt" DATETIME NOT NULL,
+    "closedAt" DATETIME,
+    "mergedAt" DATETIME,
+    "merged" BOOLEAN NOT NULL DEFAULT false,
+    "draft" BOOLEAN NOT NULL DEFAULT false,
+    "additions" INTEGER NOT NULL DEFAULT 0,
+    "deletions" INTEGER NOT NULL DEFAULT 0,
+    "changedFiles" INTEGER NOT NULL DEFAULT 0,
+    "comments" INTEGER NOT NULL DEFAULT 0,
+    "reviewComments" INTEGER NOT NULL DEFAULT 0,
+    "commits" INTEGER NOT NULL DEFAULT 0,
+    "repositoryId" TEXT NOT NULL,
+    "syncedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "PullRequest_repositoryId_fkey" FOREIGN KEY ("repositoryId") REFERENCES "Repository" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "Webhook" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "githubId" INTEGER NOT NULL,
+    "name" TEXT NOT NULL,
+    "active" BOOLEAN NOT NULL DEFAULT true,
+    "events" TEXT NOT NULL,
+    "config" TEXT NOT NULL,
+    "repositoryId" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Webhook_repositoryId_fkey" FOREIGN KEY ("repositoryId") REFERENCES "Repository" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "SyncJob" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "type" TEXT NOT NULL,
+    "repositoryId" TEXT,
+    "status" TEXT NOT NULL,
+    "itemsProcessed" INTEGER NOT NULL DEFAULT 0,
+    "error" TEXT,
+    "startedAt" DATETIME,
+    "completedAt" DATETIME,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Repository_githubId_key" ON "Repository"("githubId");
+
+-- CreateIndex
+CREATE INDEX "Repository_githubId_idx" ON "Repository"("githubId");
+
+-- CreateIndex
+CREATE INDEX "Repository_fullName_idx" ON "Repository"("fullName");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Commit_sha_key" ON "Commit"("sha");
+
+-- CreateIndex
+CREATE INDEX "Commit_repositoryId_idx" ON "Commit"("repositoryId");
+
+-- CreateIndex
+CREATE INDEX "Commit_sha_idx" ON "Commit"("sha");
+
+-- CreateIndex
+CREATE INDEX "Commit_authorDate_idx" ON "Commit"("authorDate");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PullRequest_githubId_key" ON "PullRequest"("githubId");
+
+-- CreateIndex
+CREATE INDEX "PullRequest_repositoryId_idx" ON "PullRequest"("repositoryId");
+
+-- CreateIndex
+CREATE INDEX "PullRequest_githubId_idx" ON "PullRequest"("githubId");
+
+-- CreateIndex
+CREATE INDEX "PullRequest_number_idx" ON "PullRequest"("number");
+
+-- CreateIndex
+CREATE INDEX "PullRequest_state_idx" ON "PullRequest"("state");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Webhook_githubId_key" ON "Webhook"("githubId");
+
+-- CreateIndex
+CREATE INDEX "Webhook_repositoryId_idx" ON "Webhook"("repositoryId");
+
+-- CreateIndex
+CREATE INDEX "Webhook_githubId_idx" ON "Webhook"("githubId");
+
+-- CreateIndex
+CREATE INDEX "SyncJob_type_idx" ON "SyncJob"("type");
+
+-- CreateIndex
+CREATE INDEX "SyncJob_status_idx" ON "SyncJob"("status");
+
+-- CreateIndex
+CREATE INDEX "SyncJob_repositoryId_idx" ON "SyncJob"("repositoryId");

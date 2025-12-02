@@ -1,0 +1,129 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Repository {
+  id          String   @id @default(cuid())
+  githubId    Int      @unique
+  name        String
+  fullName    String
+  description String?
+  private     Boolean
+  htmlUrl     String
+  cloneUrl    String
+  language    String?
+  stars       Int      @default(0)
+  forks       Int      @default(0)
+  openIssues  Int      @default(0)
+  createdAt   DateTime
+  updatedAt   DateTime
+  syncedAt    DateTime @default(now())
+  
+  commits     Commit[]
+  pullRequests PullRequest[]
+  webhooks    Webhook[]
+  
+  @@index([githubId])
+  @@index([fullName])
+}
+
+model Commit {
+  id            String   @id @default(cuid())
+  sha           String   @unique
+  message       String
+  author        String
+  authorEmail   String?
+  authorDate    DateTime
+  committer     String
+  committerEmail String?
+  committerDate DateTime
+  additions     Int      @default(0)
+  deletions     Int      @default(0)
+  totalChanges  Int      @default(0)
+  filesChanged  Int      @default(0)
+  htmlUrl       String
+  
+  repositoryId  String
+  repository    Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime @default(now())
+  
+  @@index([repositoryId])
+  @@index([sha])
+  @@index([authorDate])
+}
+
+model PullRequest {
+  id            String   @id @default(cuid())
+  githubId      Int      @unique
+  number        Int
+  title         String
+  body          String?
+  state         String
+  author        String
+  htmlUrl       String
+  createdAt     DateTime
+  updatedAt     DateTime
+  closedAt      DateTime?
+  mergedAt      DateTime?
+  merged        Boolean  @default(false)
+  draft         Boolean  @default(false)
+  additions     Int      @default(0)
+  deletions     Int      @default(0)
+  changedFiles  Int      @default(0)
+  comments      Int      @default(0)
+  reviewComments Int     @default(0)
+  commits       Int      @default(0)
+  
+  repositoryId  String
+  repository    Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  
+  syncedAt      DateTime @default(now())
+  
+  @@index([repositoryId])
+  @@index([githubId])
+  @@index([number])
+  @@index([state])
+}
+
+model Webhook {
+  id          String   @id @default(cuid())
+  githubId    Int      @unique
+  name        String
+  active      Boolean  @default(true)
+  events      String   // JSON array of events
+  config      String   // JSON config
+  
+  repositoryId String
+  repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+  
+  @@index([repositoryId])
+  @@index([githubId])
+}
+
+model SyncJob {
+  id            String   @id @default(cuid())
+  type          String   // 'commits', 'pull_requests', 'full'
+  repositoryId  String?
+  status        String   // 'pending', 'running', 'completed', 'failed'
+  itemsProcessed Int     @default(0)
+  error         String?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime @default(now())
+  
+  @@index([type])
+  @@index([status])
+  @@index([repositoryId])
+}
