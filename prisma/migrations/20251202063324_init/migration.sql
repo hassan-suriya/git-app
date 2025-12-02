@@ -1,6 +1,6 @@
 -- CreateTable
 CREATE TABLE "Repository" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "githubId" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "fullName" TEXT NOT NULL,
@@ -12,35 +12,38 @@ CREATE TABLE "Repository" (
     "stars" INTEGER NOT NULL DEFAULT 0,
     "forks" INTEGER NOT NULL DEFAULT 0,
     "openIssues" INTEGER NOT NULL DEFAULT 0,
-    "createdAt" DATETIME NOT NULL,
-    "updatedAt" DATETIME NOT NULL,
-    "syncedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "createdAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "syncedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Repository_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Commit" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "sha" TEXT NOT NULL,
     "message" TEXT NOT NULL,
     "author" TEXT NOT NULL,
     "authorEmail" TEXT,
-    "authorDate" DATETIME NOT NULL,
+    "authorDate" TIMESTAMP(3) NOT NULL,
     "committer" TEXT NOT NULL,
     "committerEmail" TEXT,
-    "committerDate" DATETIME NOT NULL,
+    "committerDate" TIMESTAMP(3) NOT NULL,
     "additions" INTEGER NOT NULL DEFAULT 0,
     "deletions" INTEGER NOT NULL DEFAULT 0,
     "totalChanges" INTEGER NOT NULL DEFAULT 0,
     "filesChanged" INTEGER NOT NULL DEFAULT 0,
     "htmlUrl" TEXT NOT NULL,
     "repositoryId" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "Commit_repositoryId_fkey" FOREIGN KEY ("repositoryId") REFERENCES "Repository" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Commit_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "PullRequest" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "githubId" INTEGER NOT NULL,
     "number" INTEGER NOT NULL,
     "title" TEXT NOT NULL,
@@ -48,10 +51,10 @@ CREATE TABLE "PullRequest" (
     "state" TEXT NOT NULL,
     "author" TEXT NOT NULL,
     "htmlUrl" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL,
-    "updatedAt" DATETIME NOT NULL,
-    "closedAt" DATETIME,
-    "mergedAt" DATETIME,
+    "createdAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "closedAt" TIMESTAMP(3),
+    "mergedAt" TIMESTAMP(3),
     "merged" BOOLEAN NOT NULL DEFAULT false,
     "draft" BOOLEAN NOT NULL DEFAULT false,
     "additions" INTEGER NOT NULL DEFAULT 0,
@@ -61,35 +64,39 @@ CREATE TABLE "PullRequest" (
     "reviewComments" INTEGER NOT NULL DEFAULT 0,
     "commits" INTEGER NOT NULL DEFAULT 0,
     "repositoryId" TEXT NOT NULL,
-    "syncedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "PullRequest_repositoryId_fkey" FOREIGN KEY ("repositoryId") REFERENCES "Repository" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "syncedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "PullRequest_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Webhook" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "githubId" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "active" BOOLEAN NOT NULL DEFAULT true,
     "events" TEXT NOT NULL,
     "config" TEXT NOT NULL,
     "repositoryId" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "Webhook_repositoryId_fkey" FOREIGN KEY ("repositoryId") REFERENCES "Repository" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Webhook_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "SyncJob" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "repositoryId" TEXT,
     "status" TEXT NOT NULL,
     "itemsProcessed" INTEGER NOT NULL DEFAULT 0,
     "error" TEXT,
-    "startedAt" DATETIME,
-    "completedAt" DATETIME,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "startedAt" TIMESTAMP(3),
+    "completedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "SyncJob_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -145,3 +152,12 @@ CREATE INDEX "SyncJob_status_idx" ON "SyncJob"("status");
 
 -- CreateIndex
 CREATE INDEX "SyncJob_repositoryId_idx" ON "SyncJob"("repositoryId");
+
+-- AddForeignKey
+ALTER TABLE "Commit" ADD CONSTRAINT "Commit_repositoryId_fkey" FOREIGN KEY ("repositoryId") REFERENCES "Repository"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PullRequest" ADD CONSTRAINT "PullRequest_repositoryId_fkey" FOREIGN KEY ("repositoryId") REFERENCES "Repository"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Webhook" ADD CONSTRAINT "Webhook_repositoryId_fkey" FOREIGN KEY ("repositoryId") REFERENCES "Repository"("id") ON DELETE CASCADE ON UPDATE CASCADE;
